@@ -1,0 +1,559 @@
+---
+title: "Student Services Data 2021-2022"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(tidyverse)
+library(shiny)
+library(LDAvis)
+library(topicmodels)
+library(devtools)
+library(quanteda)
+library(stm)
+library(tidytext)
+library(dplyr)
+library(ggplot2)
+library(cluster)
+library(factoextra)
+library(stats)
+library(forcats)
+library(RColorBrewer)
+library(paletteer)
+library(servr)
+library(plotly)
+
+data = read.csv("Student Services Data.csv", stringsAsFactors = FALSE)
+```
+
+
+Entire Dataset Text Analysis {data-orientation=columns}
+===================================== 
+
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+### Top 100 Words
+
+```{r}
+library(quanteda.textstats)
+library(devtools)
+library(wordcloud2)
+library(quanteda.textplots)
+
+# create a corpus
+# meta data
+meta_list = list(summary = data$Summary,
+                 date = data$Case.Created.Date,
+                 language = data$Language,
+                 type = data$Case.Type)
+
+
+# Create a quanteda corpus.
+data_corpus = corpus(data$Summary,
+                     meta = meta_list)
+
+# Top 50 Words
+data_dfm_2 = data_corpus %>% dfm(remove = c(stopwords("english"), "student", "ssc"),
+                               remove_punct = TRUE,
+                              )
+
+top_50 = data_dfm_2 %>% dfm() %>% textstat_frequency(n=50)
+
+# Word Cloud with Top 50 words
+#wordcloud2(top_50)
+textplot_wordcloud(data_dfm_2, max_words = 100, color = c("#002BFFFF", "#3399FFFF", "#FFCC66FF", "#FF9933FF", "#FF661AFF"))
+```
+
+
+
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+### Most Common Words in Each Topic
+
+```{r, include=FALSE}
+# barplot
+set.seed(42)
+
+meta_list = list(summary = data$Summary,
+                 date = data$Case.Created.Date,
+                 language = data$Language,
+                 type = data$Case.Type)
+
+data_corpus = corpus(data$Summary,
+                     meta = meta_list) 
+
+data_dfm = data_corpus %>% 
+  tokens(remove_punct = TRUE,
+         remove_symbols = TRUE,
+         remove_numbers = TRUE) %>% 
+  dfm() %>%
+  dfm_remove(pattern=c(stopwords('english'), "ssc", "student", "help", "helped", "teacher", "briya", "Briya", "need", "want", "needs", "wants", "fsw", "referral", "student's", "know", "understanding", "can"))
+
+data_dfm = dfm_subset(data_dfm, ntoken(data_dfm) > 0)
+
+data_matrix = convert(data_dfm, to=c('matrix'))
+
+# k = 19
+lda_data <- LDA(data_matrix, 19, method = "VEM")
+data_topics = tidy(lda_data, matrix = 'beta')
+
+data_topic_one = data_topics %>%
+  dplyr::filter(topic == 1) %>%
+  arrange(topic, desc(beta))
+
+data_topic_two = data_topics %>%
+  dplyr::filter(topic == 2) %>%
+  arrange(topic, desc(beta))
+
+data_topic_3 = data_topics %>%
+  dplyr::filter(topic == 3) %>%
+  arrange(topic, desc(beta))
+
+data_topic_4 = data_topics %>%
+  dplyr::filter(topic == 4) %>%
+  arrange(topic, desc(beta))
+
+data_topic_5 = data_topics %>%
+  dplyr::filter(topic == 5) %>%
+  arrange(topic, desc(beta))
+
+data_topic_6 = data_topics %>%
+  dplyr::filter(topic == 6) %>%
+  arrange(topic, desc(beta))
+
+data_topic_7 = data_topics %>%
+  dplyr::filter(topic == 7) %>%
+  arrange(topic, desc(beta))
+
+data_topic_8 = data_topics %>%
+  dplyr::filter(topic == 8) %>%
+  arrange(topic, desc(beta))
+
+data_topic_9 = data_topics %>%
+  dplyr::filter(topic == 9) %>%
+  arrange(topic, desc(beta))
+
+data_topic_10 = data_topics %>%
+  dplyr::filter(topic == 10) %>%
+  arrange(topic, desc(beta))
+
+data_topic_11 = data_topics %>%
+  dplyr::filter(topic == 11) %>%
+  arrange(topic, desc(beta))
+
+data_topic_12 = data_topics %>%
+  dplyr::filter(topic == 12) %>%
+  arrange(topic, desc(beta))
+
+data_topic_13 = data_topics %>%
+  dplyr::filter(topic == 13) %>%
+  arrange(topic, desc(beta))
+
+data_topic_14 = data_topics %>%
+  dplyr::filter(topic == 14) %>%
+  arrange(topic, desc(beta))
+
+data_topic_15 = data_topics %>%
+  dplyr::filter(topic == 15) %>%
+  arrange(topic, desc(beta))
+
+data_topic_16 = data_topics %>%
+  dplyr::filter(topic == 16) %>%
+  arrange(topic, desc(beta))
+
+data_topic_17 = data_topics %>%
+  dplyr::filter(topic == 17) %>%
+  arrange(topic, desc(beta))
+
+data_topic_18 = data_topics %>%
+  dplyr::filter(topic == 18) %>%
+  arrange(topic, desc(beta))
+
+data_topic_19 = data_topics %>%
+  dplyr::filter(topic == 19) %>%
+  arrange(topic, desc(beta))
+```
+
+
+```{r}
+# Most Common Words Barplot
+data_topic_one %>% 
+        slice_max(beta, n=10) %>% 
+        mutate(term=reorder_within(term,beta, topic)) %>% 
+        ggplot(aes(x=beta, y=term)) +
+        geom_col(fill = "#002BFFFF") +
+        labs(title= "Most Common Words in Topic 1",
+             y ="", x = "Probability of being in Topic 1") +
+        scale_y_reordered() +
+        theme_minimal()
+
+data_topic_two %>% 
+        slice_max(beta, n=10) %>% 
+        mutate(term=reorder_within(term,beta, topic)) %>% 
+        ggplot(aes(x=beta, y=term)) +
+        geom_col(fill = "#1A66FFFF") +
+        labs(title= "Most Common Words in Topic 2",
+             y ="", x = "Probability of being in Topic 2") +
+        scale_y_reordered() +
+        theme_minimal()
+
+data_topic_3 %>% 
+        slice_max(beta, n=10) %>% 
+        mutate(term=reorder_within(term,beta, topic)) %>% 
+        ggplot(aes(x=beta, y=term)) +
+        geom_col(fill = "#3399FFFF") +
+        labs(title= "Most Common Words in Topic 3",
+             y ="", x = "Probability of being in Topic 3") +
+        scale_y_reordered() +
+        theme_minimal()
+
+data_topic_4 %>% 
+        slice_max(beta, n=10) %>% 
+        mutate(term=reorder_within(term,beta, topic)) %>% 
+        ggplot(aes(x=beta, y=term)) +
+        geom_col(fill = "#66CCFFFF") +
+        labs(title= "Most Common Words in Topic 4",
+             y ="", x = "Probability of being in Topic 4") +
+        scale_y_reordered() +
+        theme_minimal()
+
+data_topic_5 %>% 
+        slice_max(beta, n=10) %>% 
+        mutate(term=reorder_within(term,beta, topic)) %>% 
+        ggplot(aes(x=beta, y=term)) +
+        geom_col(fill = "#99EEFFFF") +
+        labs(title= "Most Common Words in Topic 5",
+             y ="", x = "Probability of being in Topic 5") +
+        scale_y_reordered() +
+        theme_minimal()
+
+data_topic_6 %>% 
+        slice_max(beta, n=10) %>% 
+        mutate(term=reorder_within(term,beta, topic)) %>% 
+        ggplot(aes(x=beta, y=term)) +
+        geom_col(fill = "#FFEE99FF") +
+        labs(title= "Most Common Words in Topic 6",
+             y ="", x = "Probability of being in Topic 6") +
+        scale_y_reordered() +
+        theme_minimal()
+
+data_topic_7 %>% 
+        slice_max(beta, n=10) %>% 
+        mutate(term=reorder_within(term,beta, topic)) %>% 
+        ggplot(aes(x=beta, y=term)) +
+        geom_col(fill = "#FFCC66FF") +
+        labs(title= "Most Common Words in Topic 7",
+             y ="", x = "Probability of being in Topic 7") +
+        scale_y_reordered() +
+        theme_minimal()
+
+data_topic_8 %>% 
+        slice_max(beta, n=10) %>% 
+        mutate(term=reorder_within(term,beta, topic)) %>% 
+        ggplot(aes(x=beta, y=term)) +
+        geom_col(fill = "#FF9933FF") +
+        labs(title= "Most Common Words in Topic 8",
+             y ="", x = "Probability of being in Topic 8") +
+        scale_y_reordered() +
+        theme_minimal()
+
+data_topic_9 %>% 
+        slice_max(beta, n=10) %>% 
+        mutate(term=reorder_within(term,beta, topic)) %>% 
+        ggplot(aes(x=beta, y=term)) +
+        geom_col(fill = "#FF661AFF") +
+        labs(title= "Most Common Words in Topic 9",
+             y ="", x = "Probability of being in Topic 9") +
+        scale_y_reordered() +
+        theme_minimal()
+
+data_topic_10 %>% 
+        slice_max(beta, n=10) %>% 
+        mutate(term=reorder_within(term,beta, topic)) %>% 
+        ggplot(aes(x=beta, y=term)) +
+        geom_col(fill = "#FF2B00FF") +
+        labs(title= "Most Common Words in Topic 10",
+             y ="", x = "Probability of being in Topic 10") +
+        scale_y_reordered() +
+        theme_minimal()
+
+data_topic_11 %>% 
+        slice_max(beta, n=10) %>% 
+        mutate(term=reorder_within(term,beta, topic)) %>% 
+        ggplot(aes(x=beta, y=term)) +
+        geom_col(fill = "#3399FFFF") +
+        labs(title= "Most Common Words in Topic 11",
+             y ="", x = "Probability of being in Topic 11") +
+        scale_y_reordered() +
+        theme_minimal()
+
+data_topic_12 %>% 
+        slice_max(beta, n=10) %>% 
+        mutate(term=reorder_within(term,beta, topic)) %>% 
+        ggplot(aes(x=beta, y=term)) +
+        geom_col(fill = "#FFCC66FF") +
+        labs(title= "Most Common Words in Topic 12",
+             y ="", x = "Probability of being in Topic 12") +
+        scale_y_reordered() +
+        theme_minimal()
+
+data_topic_13 %>% 
+        slice_max(beta, n=10) %>% 
+        mutate(term=reorder_within(term,beta, topic)) %>% 
+        ggplot(aes(x=beta, y=term)) +
+        geom_col(fill = "#66CCFFFF") +
+        labs(title= "Most Common Words in Topic 13",
+             y ="", x = "Probability of being in Topic 13") +
+        scale_y_reordered() +
+        theme_minimal()
+
+data_topic_14 %>% 
+        slice_max(beta, n=10) %>% 
+        mutate(term=reorder_within(term,beta, topic)) %>% 
+        ggplot(aes(x=beta, y=term)) +
+        geom_col(fill = "#FF661AFF") +
+        labs(title= "Most Common Words in Topic 14",
+             y ="", x = "Probability of being in Topic 14") +
+        scale_y_reordered() +
+        theme_minimal()
+
+data_topic_15 %>% 
+        slice_max(beta, n=10) %>% 
+        mutate(term=reorder_within(term,beta, topic)) %>% 
+        ggplot(aes(x=beta, y=term)) +
+        geom_col(fill = "#66CCFFFF") +
+        labs(title= "Most Common Words in Topic 15",
+             y ="", x = "Probability of being in Topic 15") +
+        scale_y_reordered() +
+        theme_minimal()
+
+data_topic_16 %>% 
+        slice_max(beta, n=10) %>% 
+        mutate(term=reorder_within(term,beta, topic)) %>% 
+        ggplot(aes(x=beta, y=term)) +
+        geom_col(fill = "#3399FFFF") +
+        labs(title= "Most Common Words in Topic 16",
+             y ="", x = "Probability of being in Topic 16") +
+        scale_y_reordered() +
+        theme_minimal()
+
+data_topic_17 %>% 
+        slice_max(beta, n=10) %>% 
+        mutate(term=reorder_within(term,beta, topic)) %>% 
+        ggplot(aes(x=beta, y=term)) +
+        geom_col(fill = "#FFCC66FF") +
+        labs(title= "Most Common Words in Topic 17",
+             y ="", x = "Probability of being in Topic 17") +
+        scale_y_reordered() +
+        theme_minimal()
+
+data_topic_18 %>% 
+        slice_max(beta, n=10) %>% 
+        mutate(term=reorder_within(term,beta, topic)) %>% 
+        ggplot(aes(x=beta, y=term)) +
+        geom_col(fill = "#66CCFFFF") +
+        labs(title= "Most Common Words in Topic 18",
+             y ="", x = "Probability of being in Topic 18") +
+        scale_y_reordered() +
+        theme_minimal()
+
+data_topic_19 %>% 
+        slice_max(beta, n=10) %>% 
+        mutate(term=reorder_within(term,beta, topic)) %>% 
+        ggplot(aes(x=beta, y=term)) +
+        geom_col(fill = "#FF661AFF") +
+        labs(title= "Most Common Words in Topic 19",
+             y ="", x = "Probability of being in Topic 19") +
+        scale_y_reordered() +
+        theme_minimal()
+```
+
+
+### Most Likely Topics
+
+```{r}
+# Histogram
+data = read.csv("Student Services Data.csv", stringsAsFactors = FALSE)
+set.seed(42)
+meta_list = list(summary = data$Summary,
+                 date = data$Case.Created.Date,
+                 language = data$Language,
+                 type = data$Case.Type)
+
+data_corpus = corpus(data$Summary,
+                     meta = meta_list) 
+
+data_dfm = data_corpus %>% 
+  tokens(remove_punct = TRUE,
+         remove_symbols = TRUE,
+         remove_numbers = TRUE) %>% 
+  dfm() %>%
+  dfm_remove(pattern=c(stopwords('english'), "ssc", "student", "teacher", "briya", "Briya", "month", "want", "fsw", "needs", "referral", "student's", "know", "understanding", "can"))
+
+data_dfm = dfm_subset(data_dfm, ntoken(data_dfm) > 0)
+
+data_matrix = convert(data_dfm, to=c('matrix'))
+
+# LDA
+lda_data <- LDA(data_dfm, 19, method = "VEM")
+
+most.likely.topics <- topics(lda_data)
+hist(most.likely.topics, breaks = 19, col = "#FFEE99FF", main = "", xlab = "Most Likely Topics")
+```
+
+
+
+'Other' Category Text Analysis {data-orientation=columns}
+===================================== 
+
+
+Column
+-----------------------------------------------------------------------
+
+
+```{r, include=FALSE}
+other_data = read.csv("Other Data.csv", stringsAsFactors = FALSE)
+set.seed(42)
+
+meta_list = list(summary = other_data$Summary,
+                 date = other_data$Case.Created.Date,
+                 language = other_data$Language,
+                 type = other_data$Case.Type)
+
+other_corpus = corpus(other_data$Summary,
+                      meta = meta_list) 
+
+other_dfm = other_corpus %>% 
+  tokens(remove_punct = TRUE,
+         remove_symbols = TRUE,
+         remove_numbers = TRUE) %>% 
+  dfm() %>%
+  dfm_remove(pattern=c(stopwords('english'), "ssc", "student", "help", "helped", "teacher", "briya", "Briya", "need", "want", "needs", "wants", "fsw", "referral", "student's", "know", "understanding", "can"))
+
+other_dfm = dfm_subset(other_dfm, ntoken(other_dfm) > 0)
+
+other_matrix = convert(other_dfm, to=c('matrix'))
+
+# k = 5
+lda_data_other <- LDA(other_matrix, 5, method = "VEM")
+other_topics = tidy(lda_data_other, matrix = 'beta')
+
+other_topic_one = other_topics %>%
+  dplyr::filter(topic == 1) %>%
+  arrange(topic, desc(beta))
+
+other_topic_two = other_topics %>%
+  dplyr::filter(topic == 2) %>%
+  arrange(topic, desc(beta))
+
+other_topic_3 = other_topics %>%
+  dplyr::filter(topic == 3) %>%
+  arrange(topic, desc(beta))
+
+other_topic_4 = other_topics %>%
+  dplyr::filter(topic == 4) %>%
+  arrange(topic, desc(beta))
+
+other_topic_5 = other_topics %>%
+  dplyr::filter(topic == 5) %>%
+  arrange(topic, desc(beta))
+```
+
+
+### Most Common Words in Each Topic
+
+```{r}
+
+other_topic_one %>% 
+        slice_max(beta, n=10) %>% 
+        mutate(term=reorder_within(term,beta, topic)) %>% 
+        ggplot(aes(x=beta, y=term)) +
+        geom_col(fill = "#FF661AFF") +
+        labs(title= "Most Common Words in Topic 1",
+             y ="", x = "Probability of being in Topic 1") +
+        scale_y_reordered() +
+        theme_minimal()
+      
+other_topic_two %>% 
+        slice_max(beta, n=10) %>% 
+        mutate(term=reorder_within(term,beta, topic)) %>% 
+        ggplot(aes(x=beta, y=term)) +
+        geom_col(fill = "#3399FFFF") +
+        labs(title= "Most Common Words in Topic 2",
+             y ="", x = "Probability of being in Topic 2") +
+        scale_y_reordered() +
+        theme_minimal()
+    
+  other_topic_3 %>% 
+        slice_max(beta, n=10) %>% 
+        mutate(term=reorder_within(term,beta, topic)) %>% 
+        ggplot(aes(x=beta, y=term)) +
+        geom_col(fill = "#FFCC66FF") +
+        labs(title= "Most Common Words in Topic 3",
+             y ="", x = "Probability of being in Topic 3") +
+        scale_y_reordered() +
+        theme_minimal()
+    
+other_topic_4 %>% 
+        slice_max(beta, n=10) %>% 
+        mutate(term=reorder_within(term,beta, topic)) %>% 
+        ggplot(aes(x=beta, y=term)) +
+        geom_col(fill = "#66CCFFFF") +
+        labs(title= "Most Common Words in Topic 4",
+             y ="", x = "Probability of being in Topic 4") +
+        scale_y_reordered() +
+        theme_minimal()
+    
+other_topic_5 %>% 
+        slice_max(beta, n=10) %>% 
+        mutate(term=reorder_within(term,beta, topic)) %>% 
+        ggplot(aes(x=beta, y=term)) +
+        geom_col(fill = "#FFEE99FF") +
+        labs(title= "Most Common Words in Topic 5",
+             y ="", x = "Probability of being in Topic 5") +
+        scale_y_reordered() +
+        theme_minimal()
+```
+
+Column 
+-----------------------------------------------------------------------
+
+### Histogram
+
+```{r}
+# Histogram
+# Subset to Other category
+other_data = read.csv("Other Data.csv", stringsAsFactors = FALSE)
+
+set.seed(42)
+
+meta_list = list(summary = other_data$Summary,
+                 date = other_data$Case.Created.Date,
+                 language = other_data$Language,
+                 type = other_data$Case.Type)
+
+other_corpus = corpus(other_data$Summary,
+                     meta = meta_list) 
+
+other_dfm = other_corpus %>% 
+  tokens(remove_punct = TRUE,
+         remove_symbols = TRUE,
+         remove_numbers = TRUE) %>% 
+  dfm() %>%
+  dfm_remove(pattern=c(stopwords('english'), "ssc", "student", "teacher", "briya", "Briya", "month", "want", "fsw", "needs", "referral", "student's", "know", "understanding", "can"))
+
+other_dfm = dfm_subset(other_dfm, ntoken(other_dfm) > 0)
+
+other_matrix = convert(other_dfm, to=c('matrix'))
+
+# LDA
+lda_data_other <- LDA(other_matrix, 5, method = "VEM")
+most.likely.topics.other <- topics(lda_data_other)
+hist(most.likely.topics.other, breaks = 5, col = "#99EDFFFF", main = "Most Likely Topics: Other Category", xlab = "Most Likely Topics")  
+```
